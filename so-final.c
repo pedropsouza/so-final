@@ -11,7 +11,7 @@
 #define RESTAURANT_COUNT 5
 #define MOTORCYCLE_COUNT RESTAURANT_COUNT
 #define ORDER_CAP (RESTAURANT_COUNT*2)
-#define RIDER_COUNT RESTAURANT_COUNT
+#define RIDER_COUNT RESTAURANT_COUNT * 4
 
 pthread_mutex_t moto_mtxs[MOTORCYCLE_COUNT], // 1-to-1 with biz, so we index by
                                              // (business - 1)
@@ -452,7 +452,7 @@ void newbie(uint32_t rider_id) {
   riders[rider_id].motorcycle_rz = orders[order_id].restaurant - 1;
   int retv;
   while (1) {
-    retv = lock_motorcycle(rider_id);
+    retv = lock_order(rider_id);
     if (retv == 0) {
       break;
     } else if (orders[order_id].state != ORDER_STATE_PLACED) {
@@ -461,18 +461,18 @@ void newbie(uint32_t rider_id) {
     }
     usleep(WAIT_MOTO_TIME_US);
   }
-  orders[order_id].state = ORDER_STATE_WAIT_RIDER;
+  orders[order_id].state = ORDER_STATE_WAIT_VEHICLE;
 
-  usleep(WALK_TIME_US); // walk to the order
+  usleep(WALK_TIME_US); // walk to the motorcycle
   while (1) {
-    retv = lock_order(rider_id);
+    retv = lock_motorcycle(rider_id);
     if (retv == 0) {
       break;
-    } else if (orders[order_id].state != ORDER_STATE_WAIT_RIDER) {
-      LOG("detected a deadlock for their order %u. giving up the keys...",
+    } else if (orders[order_id].state != ORDER_STATE_WAIT_VEHICLE) {
+      LOG("detected a deadlock for their order %u. giving up the order...",
           orders[order_id].uid);
 
-      unlock_motorcycle(rider_id);
+      unlock_order(rider_id);
       return; // forfeit this order
     }
     usleep(WAIT_ORDER_TIME_US);
