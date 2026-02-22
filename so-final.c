@@ -10,8 +10,8 @@
 
 #define RESTAURANT_COUNT 5
 #define MOTORCYCLE_COUNT RESTAURANT_COUNT
-#define ORDER_CAP RESTAURANT_COUNT
-#define RIDER_COUNT 4
+#define ORDER_CAP (RESTAURANT_COUNT*2)
+#define RIDER_COUNT RESTAURANT_COUNT
 
 pthread_mutex_t moto_mtxs[MOTORCYCLE_COUNT], // 1-to-1 with biz, so we index by
                                              // (business - 1)
@@ -135,17 +135,17 @@ int main(int argc, char **argv) {
     usleep(MAIN_LOOP_TIME_US);
   }
 
-  int finished = 0;
+  int orders_finished = 0;
   for (int i = 0; 1; i++) {
-      if (i > ORDER_CAP) { i = 0; }
+      if (i >= ORDER_CAP) { i = 0; }
       if (orders[i].state == ORDER_STATE_DELIVERED || orders[i].state == ORDER_STATE_UNKNOWN) {
-          finished++;
-          if (finished >= ORDER_CAP) {
+          orders_finished++;
+          if (orders_finished >= ORDER_CAP) {
               break; // all done
           }
       } else {
           i--;
-          finished = 0;
+          orders_finished = 0;
           usleep(MAIN_LOOP_TIME_US);
           continue;
       }
